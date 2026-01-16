@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import inspect
 import numpy as np
 from numpy import ndarray
 
@@ -53,6 +54,9 @@ class RawData(Exporter):
     # voxel-based skinning weights (precomputed), shape (N, J)
     voxel_skin: Union[ndarray, None]=None
 
+    # coarse surface data (optional)
+    coarse_surface: Union[ndarray, None]=None
+
     # path to data
     path: Union[str, None]=None
 
@@ -69,6 +73,10 @@ class RawData(Exporter):
             d['no_skin'] = ~np.any(skin>0, axis=0)
         else:
             d['no_skin'] = None
+        # Filter out keys not in RawData.__init__ signature
+        valid_keys = set(inspect.signature(RawData.__init__).parameters)
+        valid_keys.discard('self')
+        d = {k: v for k, v in d.items() if k in valid_keys}
         return RawData(**d).change_dtype(origin, to)
     
     def change_dtype(self, origin, to) -> 'RawData':
