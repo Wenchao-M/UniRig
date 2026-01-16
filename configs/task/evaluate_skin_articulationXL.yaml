@@ -1,7 +1,7 @@
 mode: validate
 debug: False
 experiment_name: evaluate_skin_articulationXL
-resume_from_checkpoint: /gpuhome/wmm5390/code/baseline/UniRig/UniRig_weights/skin/articulation-xl
+resume_from_checkpoint: /gpuhome/wmm5390/code/baseline/UniRig/UniRig_weights/skin/articulation-xl/model.ckpt
 
 components:
   data: data_articulationXL_eval_skin
