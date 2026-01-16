@@ -143,18 +143,26 @@ class VertexGroupVoxelSkin(VertexGroup):
         self.backend = kwargs.get('backend', 'pyrender')
     
     def get_vertex_group(self, asset: Asset) -> Dict[str, ndarray]:
-        
+        # Check if voxel_skin is already precomputed in meta (from RawData)
+        if asset.meta is not None and 'voxel_skin' in asset.meta:
+            skin = asset.meta['voxel_skin']
+            skin = np.nan_to_num(skin, nan=0., posinf=0., neginf=0.)
+            return {
+                'voxel_skin': skin,
+            }
+
+        # Otherwise, calculate voxel_skin from scratch
         # normalize into [-1, 1] first
         min_vals = np.min(asset.vertices, axis=0)
         max_vals = np.max(asset.vertices, axis=0)
-        
+
         center = (min_vals + max_vals) / 2
-        
+
         scale = np.max(max_vals - min_vals) / 2
-        
+
         normalized_vertices = (asset.vertices - center) / scale
         normalized_joints = (asset.joints - center) / scale
-        
+
         grid_coords = voxelization(
             vertices=normalized_vertices,
             faces=asset.faces,

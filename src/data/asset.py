@@ -323,6 +323,11 @@ class Asset(Exporter):
         '''
         Return an asset initialized from raw data and do transform.
         '''
+        # Store precomputed voxel_skin in meta if available
+        meta = {}
+        if hasattr(raw_data, 'voxel_skin') and raw_data.voxel_skin is not None:
+            meta['voxel_skin'] = raw_data.voxel_skin
+
         return Asset(
             cls=cls,
             path=path,
@@ -338,7 +343,7 @@ class Asset(Exporter):
             parents=raw_data.parents,
             names=raw_data.names,
             matrix_local=raw_data.matrix_local,
-            meta={},
+            meta=meta,
         )
     
     def get_tokenize_input(self) -> TokenizeInput:
