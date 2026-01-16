@@ -316,16 +316,17 @@ class UniRigSkin(ModelSpec):
         vertices: FloatTensor = batch['vertices'] # (B, N, 3)
         normals: FloatTensor = batch['normals']
         joints: FloatTensor = batch['joints']
-        tails: FloatTensor = batch['tails']
+        tails: FloatTensor = batch.get('tails', None)  # Optional, not used in prediction
         voxel_skin: FloatTensor = batch['voxel_skin']
         parents: LongTensor = batch['parents']
-        
+
         # turn inputs' dtype into model's dtype
         dtype = next(self.parameters()).dtype
         vertices = vertices.type(dtype)
         normals = normals.type(dtype)
         joints = joints.type(dtype)
-        tails = tails.type(dtype)
+        if tails is not None:
+            tails = tails.type(dtype)
         voxel_skin = voxel_skin.type(dtype)
         
         B = vertices.shape[0]
