@@ -1,0 +1,35 @@
+mode: validate
+debug: False
+experiment_name: evaluate_skin_articulationXL
+resume_from_checkpoint: /gpuhome/wmm5390/code/baseline/UniRig/UniRig_weights/skin/articulation-xl
+
+components:
+  data: data_articulationXL_eval_skin
+  transform: eval_skin_transform
+  model: unirig_skin
+  system: skin
+  data_name: raw_data.npz
+
+# Loss config needed for SkinSystem initialization (set to 0 for evaluation-only)
+loss:
+  vertex_loss: 0.0
+  normalization_loss: 0.0
+  skin_l1_loss: 0.0
+  bce_loss: 0.0
+  skin_zero_l1_loss: 0.0
+  skin_non_zero_l1_loss: 0.0
+
+### enable this writer if you want to save objs for visualization
+# writer:
+#   __target__: skin
+#   output_dir: validation_vis_debug
+#   add_num: False
+#   save_name: val
+#   export_npz: predict_skin # this must be specified if textured results are required
+#   export_fbx: result_fbx
+
+trainer:
+  num_nodes: 1
+  devices: 1
+  precision: bf16-mixed
+  accelerator: gpu

@@ -1,0 +1,15 @@
+input_dataset_dir: &input_dataset_dir /home/jovyan/runs/wenchao/avatar-auto-setup/avatar_auto_setup/experimental/ar_rigging/articulationXL/test_npz_vs_v2
+
+validate_dataset_config:
+  shuffle: False
+  batch_size: 1
+  num_workers: 1
+  pin_memory: True
+  persistent_workers: False
+  datapath_config:
+    input_dataset_dir: *input_dataset_dir
+    use_prob: False
+    data_path:
+      mixamo: [
+        [/home/jovyan/runs/wenchao/avatar-auto-setup/avatar_auto_setup/experimental/ar_rigging/articulationXL/test_npz_vs_v2/list.txt, 1.0],
+      ]

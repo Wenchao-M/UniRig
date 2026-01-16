@@ -1,0 +1,27 @@
+mode: validate
+debug: False
+experiment_name: evaluate_skin
+resume_from_checkpoint: experiments/skin/model.ckpt  # Update with actual checkpoint path
+
+components:
+  data: rignet_bs2
+  transform: train_rignet_skin_transform
+  model: unirig_skin
+  system: skin
+  data_name: raw_data.npz
+
+# Loss config needed for SkinSystem initialization (set to 0 for evaluation-only)
+loss:
+  vertex_loss: 0.0
+  normalization_loss: 0.0
+  skin_l1_loss: 0.0
+  bce_loss: 0.0
+  skin_zero_l1_loss: 0.0
+  skin_non_zero_l1_loss: 0.0
+
+trainer:
+  num_nodes: 1
+  devices: 1
+  precision: bf16-mixed
+  accelerator: gpu
+  strategy: auto

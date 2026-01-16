@@ -584,7 +584,96 @@ class UniRigSkin(ModelSpec):
     
     def forward(self, data: Dict) -> Dict:
         return self.training_step(data=data)
-    
+
+    def validation_step(self, batch: Dict) -> Dict[str, FloatTensor]:
+        '''
+        Validation step that computes evaluation metrics.
+
+        Returns:
+            Dictionary containing:
+            - val_mae_loss: Mean Absolute Error
+            - val_ce_loss: Cross Entropy loss
+            - val_cosine_sim: Cosine similarity
+            - val_mae_loss_p: MAE on filtered/pruned weights
+            - val_precision: Precision metric
+            - val_recall: Recall metric
+            - skin_pred: List of predictions for visualization
+        '''
+        from ..system.metrics import (
+            skinning_mae, skinning_ce, skinning_cosine_similarity,
+            skinning_precision_recall
+        )
+
+        with torch.no_grad():
+            num_bones: Tensor = batch['num_bones']
+            skin_gt: FloatTensor = batch['skin']
+
+            dtype = next(self.parameters()).dtype
+            skin_gt = skin_gt.type(dtype)
+
+            skin_pred, indices = self._get_predict(batch=batch)
+            skin_gt = skin_gt[:, indices]
+
+            B, N, _ = skin_pred.shape
+
+            # Initialize metric accumulators
+            mae_losses = []
+            ce_losses = []
+            cosine_sims = []
+            mae_losses_p = []
+            precisions = []
+            recalls = []
+
+            for i in range(B):
+                J_sample = num_bones[i].item()
+                if J_sample <= 0:
+                    continue
+
+                sample_pred = skin_pred[i, :, :J_sample]
+                sample_gt = skin_gt[i, :, :J_sample]
+
+                # Normalize
+                sample_pred_norm = sample_pred / (sample_pred.sum(dim=-1, keepdim=True) + 1e-10)
+                sample_gt_norm = sample_gt / (sample_gt.sum(dim=-1, keepdim=True) + 1e-10)
+
+                # 1. MAE
+                mae_losses.append(skinning_mae(sample_pred_norm, sample_gt_norm))
+
+                # 2. Cross Entropy
+                ce_losses.append(skinning_ce(sample_pred_norm, sample_gt_norm))
+
+                # 3. Cosine Similarity (with weight transformation like reference)
+                transformed_pred = sample_pred_norm * (1 + 2 * 0.001) - 0.001
+                cosine_sims.append(skinning_cosine_similarity(transformed_pred, sample_gt_norm))
+
+                # 4. Precision, Recall, MAE on filtered weights
+                precision, recall, mae_p = skinning_precision_recall(sample_pred_norm, sample_gt_norm)
+                precisions.append(precision)
+                recalls.append(recall)
+                mae_losses_p.append(mae_p)
+
+            # Helper function to safely average metrics
+            def safe_mean(tensor_list, device):
+                if not tensor_list:
+                    return torch.tensor(0.0, device=device)
+                if isinstance(tensor_list[0], (int, float)):
+                    return torch.tensor(tensor_list, device=device).mean()
+                return torch.stack([t if isinstance(t, Tensor) else torch.tensor(t, device=device)
+                                   for t in tensor_list]).mean()
+
+            device = skin_pred.device
+            result = {
+                "val_mae_loss": safe_mean(mae_losses, device),
+                "val_ce_loss": safe_mean(ce_losses, device),
+                "val_cosine_sim": safe_mean(cosine_sims, device),
+                "val_mae_loss_p": safe_mean(mae_losses_p, device),
+                "val_precision": safe_mean(precisions, device),
+                "val_recall": safe_mean(recalls, device),
+                "skin_pred": [skin_pred[i, :, :num_bones[i]] for i in range(B)],
+            }
+
+            return result
+
     def predict_step(self, batch: Dict):
         with torch.no_grad():
             num_bones: Tensor = batch['num_bones']

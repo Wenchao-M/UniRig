@@ -1,0 +1,34 @@
+sampler_config: &sampler_config
+  method: mix
+  num_samples: 16384
+  vertex_samples: 4096
+
+tail_config: &tail_config
+  copy_joint_to_tail: False # Be careful ! If tail is important, keep it False !!!
+  connect_tail_to_unique_son: True
+
+order_config: &order_config
+  skeleton_path:
+    vroid: ./configs/skeleton/vroid.yaml
+    mixamo: ./configs/skeleton/mixamo.yaml
+
+validate_transform_config:
+  augment_config:
+    augment_affine_config:
+      normalize_into: [-1.0, 1.0]
+  tail_config: *tail_config
+  order_config: *order_config
+
+  vertex_group_config:
+    names: ['voxel_skin', 'skin']
+    kwargs:
+      voxel_skin:
+        grid: 196  # Same as inference for consistency
+        alpha: 0.5
+        link_dis: 0.00001
+        grid_query: 7
+        vertex_query: 1
+        grid_weight: 3.0
+        # mode: exp
+
+  sampler_config: *sampler_config

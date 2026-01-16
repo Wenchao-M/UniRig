@@ -118,7 +118,26 @@ class SkinSystem(L.LightningModule):
 
         return self.forward(batch)
     
-    def validation_step(self, batch, batch_idx, dataloader_idx=None) -> Tensor:
+    def validation_step(self, batch, batch_idx, dataloader_idx=None) -> Union[Tensor, Dict]:
+        # Check if model has validation_step method (for evaluation metrics)
+        if hasattr(self.model, 'validation_step'):
+            outputs = self.model.validation_step(batch)
+
+            # Log validation metrics (excluding skin_pred which is for visualization)
+            for metric_name, metric_value in outputs.items():
+                if metric_name != "skin_pred" and isinstance(metric_value, Tensor):
+                    self.log(
+                        f"val/{metric_name}",
+                        metric_value,
+                        on_step=False,
+                        on_epoch=True,
+                        prog_bar=True,
+                        sync_dist=True,
+                    )
+
+            return outputs
+
+        # Fallback to existing behavior for backward compatibility
         assert self.loss_config is not None
         return self.forward(batch, validate=True)
     
