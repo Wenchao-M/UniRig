@@ -49,10 +49,13 @@ class RawData(Exporter):
     
     # whether the joint has skin, bool
     no_skin: Union[ndarray, None]=None
-    
+
+    # voxel-based skinning weights (precomputed), shape (N, J)
+    voxel_skin: Union[ndarray, None]=None
+
     # path to data
     path: Union[str, None]=None
-    
+
     # data cls
     cls: Union[str, None]=None
     
