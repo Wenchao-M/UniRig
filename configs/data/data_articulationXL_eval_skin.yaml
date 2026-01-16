@@ -11,5 +11,5 @@ validate_dataset_config:
     use_prob: False
     data_path:
       mixamo: [
-        [/gpuhome/wmm5390/code/ar_rigging_master/data/AX_processed_test_npz_vs_bone/list.txt, 1.0],
+        [/gpuhome/wmm5390/code/ar_rigging_master/data/AX_processed_test_npz_vs_bone/list_dd.txt, 1.0],
       ]
